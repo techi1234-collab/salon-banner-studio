@@ -1,0 +1,9 @@
+{
+  "name": "Salon Banner Studio",
+  "short_name": "Banner Studio",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f1ea",
+  "theme_color": "#f7f1ea",
+  "description": "Professional Banner Creator for Hair Salons"
+}
