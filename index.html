@@ -1,451 +1,88 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Salon Banner Studio</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f7f1ea">
-<style>
-:root{
-  --bg:#f7f1ea;--card:#fffdfb;--ink:#1d1a17;--muted:#7b6d61;
-  --line:#e5d8cb;--accent:#211c18;--soft:#eadfd4;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;background:linear-gradient(180deg,#fbf7f2 0%,var(--bg) 100%);
-  color:var(--ink);
-  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
-}
-.wrap{max-width:980px;margin:0 auto;padding:18px 14px 30px}
-.hero{text-align:center;padding:10px 0 4px}
-.logo{
-  font-family:"Times New Roman","Yu Mincho","Hiragino Mincho ProN",serif;
-  font-size:28px;letter-spacing:.06em;margin:4px 0 4px
-}
-.tagline{font-size:12px;letter-spacing:.16em;color:#8a7665;text-transform:uppercase;margin:0 0 6px}
-.lead{font-size:13px;color:var(--muted);line-height:1.7;margin:0}
-.card{
-  background:rgba(255,253,251,.96);border:1px solid var(--line);
-  border-radius:20px;padding:16px;margin:14px 0;
-  box-shadow:0 10px 28px rgba(75,48,20,.07);
-}
-label{display:block;font-size:13px;font-weight:800;margin:12px 0 7px;color:#2b2520}
-input,select{
-  width:100%;font-size:16px;border:1px solid #ddd0c4;border-radius:13px;
-  padding:11px;background:#fff;color:var(--ink)
-}
-input[type=file]{background:#faf7f3;border:1px dashed #c8b6a5}
-.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.slots{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.slot{
-  min-height:112px;border:1px solid var(--line);border-radius:14px;background:#efe8df;
-  overflow:hidden;display:flex;align-items:center;justify-content:center;color:#9b8c7e;
-  font-size:13px;position:relative;touch-action:none;
-}
-.slot img{width:100%;height:100%;object-fit:cover}
-.slot .badge{
-  position:absolute;left:6px;top:6px;background:rgba(255,255,255,.82);
-  border-radius:999px;padding:2px 7px;font-size:11px;color:#4d4036
-}
-.slot.dragging{opacity:.45;outline:2px solid #8a725e}
-.controls{display:grid;grid-template-columns:1fr;gap:10px;margin-top:12px}
-.itemCtl{border:1px solid var(--line);border-radius:15px;padding:10px;background:#fffaf6}
-.itemTop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.itemTop strong{font-size:13px}
-.miniBtns{display:flex;gap:6px;flex-wrap:wrap}
-.miniBtns button{font-size:12px;padding:8px 10px}
-.sliderRow{display:grid;grid-template-columns:52px 1fr 45px;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
-input[type=range]{padding:0}
-.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-button{appearance:none;border:0;border-radius:999px;padding:13px 16px;font-size:15px;font-weight:900;cursor:pointer}
-.primary{background:var(--accent);color:#fff}
-.subbtn{background:var(--soft);color:var(--accent)}
-.ghost{background:#f2e9e0;color:#3e332b}
-.preview{overflow:auto;-webkit-overflow-scrolling:touch}
-canvas{width:100%;max-width:750px;background:#ddd;border-radius:12px;display:block}
-.note{font-size:12px;color:var(--muted);line-height:1.65;margin:8px 0 0}
-.presetColors{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
-.swatch{width:30px;height:30px;border-radius:999px;border:1px solid rgba(0,0,0,.18);box-shadow:0 2px 6px rgba(0,0,0,.08);padding:0}
-.toggle{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14px;color:#3b332d}
-.toggle input{width:auto}
-#imgOut img{width:100%;max-width:750px;border-radius:12px;margin-top:10px}
-.footer{text-align:center;color:#9a8878;font-size:11px;margin:16px 0 0}
-@media(max-width:640px){
-  .wrap{padding:14px 12px 28px}
-  .slots{grid-template-columns:repeat(5,88px);overflow-x:auto;padding-bottom:2px}
-  .slot{min-height:88px}
-  .row{grid-template-columns:1fr 1fr}
-  .btns{grid-template-columns:1fr}
-  .logo{font-size:25px}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Salon Banner Studio</title>
+  <meta name="theme-color" content="#f7f1ea">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
-  <div class="hero">
-    <div class="logo">Salon Banner Studio</div>
-    <p class="tagline">Professional Banner Creator</p>
-    <p class="lead">写真をそのまま並べる美容室バナー作成ツール。AI生成しないので顔は変わりません。</p>
-  </div>
+  <main class="app">
+    <header class="hero">
+      <div class="brand-mark">SBS</div>
+      <h1>Salon Banner Studio</h1>
+      <p>Professional Banner Creator</p>
+      <span>写真をそのまま使うので、顔は変わりません。</span>
+    </header>
 
-  <div class="card">
-    <label>画像を選択（4枚でも5枚でもOK）</label>
-    <input id="files" type="file" accept="image/*" multiple>
-    <p class="note">ドラッグで順番変更できます。4枚なら4分割、5枚なら5分割で自動配置します。</p>
-    <div id="slots" class="slots"></div>
-  </div>
+    <section class="panel">
+      <h2>1. 画像を選択</h2>
+      <input id="files" class="file-input" type="file" accept="image/*" multiple>
+      <p class="note">4枚・5枚に対応。ドラッグで順番変更できます。</p>
+      <div id="slots" class="slots"></div>
+    </section>
 
-  <div class="card">
-    <label>店名・ブランド名</label>
-    <input id="shop" type="text" value="Salon Name">
+    <section class="panel">
+      <h2>2. 文字設定</h2>
+      <label>サロン名・ブランド名</label>
+      <input id="shop" type="text" value="Salon Name">
 
-    <div class="row">
-      <div>
-        <label>書体</label>
-        <select id="fontFamily">
-          <option value="mincho" selected>明朝</option>
-          <option value="serif">Serif / 高級感</option>
-          <option value="gothic">ゴシック</option>
-          <option value="didot">Didot風</option>
-          <option value="bodoni">Bodoni風</option>
-          <option value="script">筆記体風</option>
-        </select>
+      <div class="grid-2">
+        <div><label>書体</label><select id="fontFamily">
+          <option value="mincho" selected>明朝</option><option value="serif">Serif / 高級感</option>
+          <option value="gothic">ゴシック</option><option value="didot">Didot風</option>
+          <option value="bodoni">Bodoni風</option><option value="script">筆記体風</option>
+        </select></div>
+        <div><label>文字色</label><input id="textColor" type="color" value="#ffffff"></div>
+        <div><label>文字サイズ</label><input id="fontSize" type="number" value="34" min="10" max="90"></div>
+        <div><label>文字位置</label><select id="textPos">
+          <option value="bottom" selected>下中央</option><option value="center">中央</option>
+          <option value="top">上中央</option><option value="none">文字なし</option>
+        </select></div>
       </div>
-      <div>
-        <label>文字色</label>
-        <input id="textColor" type="color" value="#ffffff">
+
+      <div class="swatches">
+        <button class="swatch" style="background:#ffffff" data-color="#ffffff" title="白"></button>
+        <button class="swatch" style="background:#111111" data-color="#111111" title="黒"></button>
+        <button class="swatch" style="background:#8a8782" data-color="#8a8782" title="グレー"></button>
+        <button class="swatch" style="background:#d7c4aa" data-color="#d7c4aa" title="ベージュ"></button>
+        <button class="swatch" style="background:#c7a15a" data-color="#c7a15a" title="ゴールド"></button>
       </div>
-      <div>
-        <label>文字サイズ</label>
-        <input id="fontSize" type="number" value="34" min="10" max="90">
+      <label class="check"><input id="shadowOn" type="checkbox" checked> 文字の影を入れる</label>
+    </section>
+
+    <section class="panel">
+      <h2>3. シームレス設定</h2>
+      <label class="check"><input id="seamlessOn" type="checkbox" checked> シームレスコラージュ風にする</label>
+      <div class="grid-2">
+        <div><label>重なり幅</label><input id="overlap" type="number" value="18" min="0" max="60"></div>
+        <div><label>境界ぼかし</label><input id="fadeWidth" type="number" value="42" min="0" max="100"></div>
       </div>
-      <div>
-        <label>文字位置</label>
-        <select id="textPos">
-          <option value="bottom" selected>下中央</option>
-          <option value="center">中央</option>
-          <option value="top">上中央</option>
-          <option value="none">文字なし</option>
-        </select>
-      </div>
-    </div>
+      <p class="note">MeituのAI合成ではなく、重なり＋フェードで自然に馴染ませます。</p>
+    </section>
 
-    <div class="presetColors">
-      <button class="swatch" title="白" style="background:#ffffff" data-color="#ffffff"></button>
-      <button class="swatch" title="黒" style="background:#111111" data-color="#111111"></button>
-      <button class="swatch" title="グレー" style="background:#8a8782" data-color="#8a8782"></button>
-      <button class="swatch" title="ベージュ" style="background:#d7c4aa" data-color="#d7c4aa"></button>
-      <button class="swatch" title="ゴールド" style="background:#c7a15a" data-color="#c7a15a"></button>
-    </div>
+    <section class="panel">
+      <h2>4. 画像ごとの調整</h2>
+      <p class="note">左右・上下・拡大・左右反転を調整できます。</p>
+      <div id="controls" class="controls"></div>
+    </section>
 
-    <label class="toggle"><input id="shadowOn" type="checkbox" checked> 文字の影（シャドウ）あり</label>
-    <label class="toggle"><input id="seamlessOn" type="checkbox" checked> シームレスコラージュ風にする</label>
+    <section class="panel action-panel">
+      <button id="make" class="primary">作成する</button>
+      <button id="save" class="secondary">PNG保存</button>
+      <p id="status" class="note"></p>
+    </section>
 
-    <div class="row">
-      <div>
-        <label>重なり幅</label>
-        <input id="overlap" type="number" value="12" min="0" max="40">
-      </div>
-      <div>
-        <label>境界ぼかし</label>
-        <input id="fadeWidth" type="number" value="28" min="0" max="80">
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <strong>画像ごとの調整</strong>
-    <p class="note">左右・上下・拡大率・左右反転を調整できます。</p>
-    <div id="controls" class="controls"></div>
-  </div>
-
-  <div class="card">
-    <div class="btns">
-      <button class="primary" id="make">作成する</button>
-      <button class="subbtn" id="save">PNG保存</button>
-    </div>
-    <p id="status" class="note"></p>
-  </div>
-
-  <div class="card">
-    <strong>プレビュー（750×250px）</strong>
-    <div class="preview"><canvas id="canvas" width="750" height="250"></canvas></div>
-    <p class="note">保存できない場合は、PNG保存後に表示される画像を長押し保存してください。</p>
-    <div id="imgOut"></div>
-  </div>
-  <div class="footer">© Salon Banner Studio</div>
-</div>
-
-<script>
-let items = [];
-let dragIndex = null;
-const slots = document.getElementById('slots');
-const controls = document.getElementById('controls');
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const statusEl = document.getElementById('status');
-const imgOut = document.getElementById('imgOut');
-
-function load(file){
-  return new Promise((res,rej)=>{
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => res({img,url,name:file.name,x:0,y:0,zoom:1.12,flip:false});
-    img.onerror = rej;
-    img.src = url;
-  });
-}
-
-document.getElementById('files').addEventListener('change', async e=>{
-  const files = Array.from(e.target.files).filter(f=>f.type.startsWith('image/')).slice(0,5);
-  items = [];
-  statusEl.textContent = '読み込み中…';
-  for(const f of files){ items.push(await load(f)); }
-  renderAll();
-  statusEl.textContent = items.length + '枚読み込みました';
-});
-
-function renderSlots(){
-  slots.innerHTML = '';
-  const max = Math.max(items.length, 5);
-  for(let i=0;i<max;i++){
-    const d = document.createElement('div');
-    d.className = 'slot';
-    d.draggable = !!items[i];
-    d.dataset.index = i;
-    if(items[i]){
-      d.innerHTML = '<span class="badge">'+(i+1)+'</span><img src="'+items[i].url+'">';
-      d.addEventListener('dragstart',()=>{dragIndex=i;d.classList.add('dragging');});
-      d.addEventListener('dragend',()=>{dragIndex=null;d.classList.remove('dragging');});
-      d.addEventListener('dragover',ev=>ev.preventDefault());
-      d.addEventListener('drop',ev=>{
-        ev.preventDefault();
-        const to = Number(d.dataset.index);
-        if(dragIndex===null || dragIndex===to) return;
-        const moved = items.splice(dragIndex,1)[0];
-        items.splice(to,0,moved);
-        renderAll();
-      });
-    }else{
-      d.innerHTML = '<span class="badge">'+(i+1)+'</span>画像';
-    }
-    slots.appendChild(d);
-  }
-}
-
-function renderControls(){
-  controls.innerHTML = '';
-  items.forEach((it,i)=>{
-    const box = document.createElement('div');
-    box.className='itemCtl';
-    box.innerHTML = `
-      <div class="itemTop">
-        <strong>画像${i+1}</strong>
-        <div class="miniBtns">
-          <button class="ghost" data-act="left">←</button>
-          <button class="ghost" data-act="right">→</button>
-          <button class="ghost" data-act="up">↑</button>
-          <button class="ghost" data-act="down">↓</button>
-          <button class="ghost" data-act="flip">${it.flip?'反転中':'左右反転'}</button>
-        </div>
-      </div>
-      <div class="sliderRow">
-        <span>左右</span>
-        <input type="range" min="-100" max="100" value="${it.x}" data-kind="x">
-        <span>${it.x}</span>
-      </div>
-      <div class="sliderRow">
-        <span>上下</span>
-        <input type="range" min="-100" max="100" value="${it.y}" data-kind="y">
-        <span>${it.y}</span>
-      </div>
-      <div class="sliderRow">
-        <span>拡大</span>
-        <input type="range" min="90" max="160" value="${Math.round(it.zoom*100)}" data-kind="zoom">
-        <span>${Math.round(it.zoom*100)}%</span>
-      </div>
-    `;
-    box.querySelectorAll('button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const act = btn.dataset.act;
-        if(act==='left') it.x -= 10;
-        if(act==='right') it.x += 10;
-        if(act==='up') it.y -= 10;
-        if(act==='down') it.y += 10;
-        if(act==='flip') it.flip = !it.flip;
-        it.x = Math.max(-100, Math.min(100, it.x));
-        it.y = Math.max(-100, Math.min(100, it.y));
-        renderAll();
-      });
-    });
-    box.querySelectorAll('input[type=range]').forEach(sl=>{
-      sl.addEventListener('input',()=>{
-        if(sl.dataset.kind==='x') it.x = Number(sl.value);
-        if(sl.dataset.kind==='y') it.y = Number(sl.value);
-        if(sl.dataset.kind==='zoom') it.zoom = Number(sl.value)/100;
-        renderAll(false);
-      });
-    });
-    controls.appendChild(box);
-  });
-}
-
-function fontCss(){
-  const v = document.getElementById('fontFamily').value;
-  if(v==='mincho') return '"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif';
-  if(v==='gothic') return '"Hiragino Sans","Yu Gothic",Arial,sans-serif';
-  if(v==='didot') return 'Didot,"Bodoni 72","Times New Roman",serif';
-  if(v==='bodoni') return '"Bodoni 72","Bodoni 72 Smallcaps","Times New Roman",serif';
-  if(v==='script') return '"Snell Roundhand","Zapfino","Brush Script MT",cursive';
-  return 'Georgia,"Times New Roman",serif';
-}
-
-function coverParams(item,w,h){
-  const img = item.img;
-  const iw = img.naturalWidth, ih = img.naturalHeight;
-  const scale = Math.max(w/iw,h/ih) * item.zoom;
-  const sw = w/scale, sh = h/scale;
-  let sx = (iw-sw)/2 + item.x/scale;
-  let sy = (ih-sh)*0.36 + item.y/scale;
-  sx = Math.max(0,Math.min(iw-sw,sx));
-  sy = Math.max(0,Math.min(ih-sh,sy));
-  return {sx,sy,sw,sh};
-}
-
-function drawItem(item,x,y,w,h){
-  const p = coverParams(item,w,h);
-  ctx.save();
-  ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
-  if(item.flip){
-    ctx.translate(x+w,y); ctx.scale(-1,1);
-    ctx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,0,0,w,h);
-  }else{
-    ctx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,x,y,w,h);
-  }
-  ctx.restore();
-}
-
-function drawFeather(item,x,y,w,h,side,fade){
-  if(fade <= 0) return;
-  const p = coverParams(item,w,h);
-  const off = document.createElement('canvas');
-  off.width = Math.ceil(w);
-  off.height = Math.ceil(h);
-  const octx = off.getContext('2d');
-
-  octx.save();
-  if(item.flip){
-    octx.translate(w,0); octx.scale(-1,1);
-    octx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,0,0,w,h);
-  }else{
-    octx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,0,0,w,h);
-  }
-  octx.restore();
-
-  octx.globalCompositeOperation = 'destination-in';
-  const grad = octx.createLinearGradient(0,0,w,0);
-  if(side === 'left'){
-    grad.addColorStop(0,'rgba(0,0,0,0)');
-    grad.addColorStop(Math.min(1,fade/w),'rgba(0,0,0,1)');
-    grad.addColorStop(1,'rgba(0,0,0,1)');
-  }else{
-    grad.addColorStop(0,'rgba(0,0,0,1)');
-    grad.addColorStop(Math.max(0,1-fade/w),'rgba(0,0,0,1)');
-    grad.addColorStop(1,'rgba(0,0,0,0)');
-  }
-  octx.fillStyle = grad;
-  octx.fillRect(0,0,w,h);
-  ctx.drawImage(off,x,y);
-}
-
-function draw(){
-  ctx.clearRect(0,0,750,250);
-  ctx.fillStyle='#eee'; ctx.fillRect(0,0,750,250);
-  const n = items.length;
-  if(!n){
-    ctx.fillStyle='#aaa'; ctx.font='20px sans-serif'; ctx.textAlign='center';
-    ctx.fillText('画像を4〜5枚選択してください',375,125);
-    return;
-  }
-
-  const seamless = document.getElementById('seamlessOn').checked;
-  const overlap = seamless ? Number(document.getElementById('overlap').value || 0) : 0;
-  const fade = seamless ? Number(document.getElementById('fadeWidth').value || 0) : 0;
-  const baseW = (750 + overlap*(n-1)) / n;
-
-  if(!seamless){
-    const w = 750/n;
-    for(let i=0;i<n;i++) drawItem(items[i],i*w,0,w,250);
-  }else{
-    for(let i=0;i<n;i++){
-      const x = i*(baseW-overlap);
-      drawItem(items[i],x,0,baseW,250);
-    }
-    // 境界部分に左右のフェザーを再描画して自然に馴染ませる
-    for(let i=1;i<n;i++){
-      const seamX = i*(baseW-overlap);
-      const leftX = (i-1)*(baseW-overlap);
-      const rightX = i*(baseW-overlap);
-      drawFeather(items[i-1],leftX,0,baseW,250,'right',fade);
-      drawFeather(items[i],rightX,0,baseW,250,'left',fade);
-      // ほんのり明るいベールで硬い線を消す
-      const gx = seamX - fade/2;
-      const g=ctx.createLinearGradient(gx,0,gx+fade,0);
-      g.addColorStop(0,'rgba(255,255,255,0)');
-      g.addColorStop(.5,'rgba(255,255,255,.08)');
-      g.addColorStop(1,'rgba(255,255,255,0)');
-      ctx.fillStyle=g; ctx.fillRect(gx,0,fade,250);
-    }
-  }
-
-  const pos = document.getElementById('textPos').value;
-  const text = document.getElementById('shop').value.trim();
-  if(pos !== 'none' && text){
-    const fs = parseInt(document.getElementById('fontSize').value || '34',10);
-    const y = pos==='top' ? 48 : pos==='center' ? 125 : 208;
-    ctx.save();
-    ctx.font = fs + 'px ' + fontCss();
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    if(document.getElementById('shadowOn').checked){
-      ctx.shadowColor='rgba(0,0,0,.45)'; ctx.shadowBlur=7; ctx.shadowOffsetY=2;
-    }
-    ctx.fillStyle = document.getElementById('textColor').value;
-    ctx.fillText(text,375,y);
-    ctx.restore();
-  }
-}
-
-function renderAll(rebuild=true){
-  renderSlots();
-  if(rebuild) renderControls();
-  draw();
-}
-
-function save(){
-  draw();
-  const data = canvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.download = 'salon-banner-studio-750x250.png';
-  a.href = data;
-  a.click();
-  imgOut.innerHTML = '<p class="note">保存できない場合は下の画像を長押し保存してください。</p><img src="'+data+'">';
-}
-
-document.getElementById('make').addEventListener('click',draw);
-document.getElementById('save').addEventListener('click',save);
-['shop','fontFamily','textColor','fontSize','textPos','shadowOn','seamlessOn','overlap','fadeWidth'].forEach(id=>{
-  const el=document.getElementById(id);
-  el.addEventListener('input',()=>renderAll(false));
-  el.addEventListener('change',()=>renderAll(false));
-});
-document.querySelectorAll('.swatch').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.getElementById('textColor').value = b.dataset.color;
-    renderAll(false);
-  });
-});
-renderAll();
-</script>
+    <section class="panel">
+      <h2>プレビュー（750×250px）</h2>
+      <div class="preview"><canvas id="canvas" width="750" height="250"></canvas></div>
+      <p class="note">保存できない場合は、PNG保存後に下へ表示される画像を長押し保存してください。</p>
+      <div id="imgOut"></div>
+    </section>
+    <footer>© Salon Banner Studio</footer>
+  </main>
+  <script src="script.js"></script>
 </body>
 </html>
