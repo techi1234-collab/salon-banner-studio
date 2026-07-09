@@ -17,6 +17,14 @@
       <span>写真をそのまま使うので、顔は変わりません。</span>
     </header>
 
+    <section class="sticky-preview">
+      <div class="preview-head">
+        <strong>プレビュー</strong>
+        <span>750×250px</span>
+      </div>
+      <div class="preview"><canvas id="canvas" width="750" height="250"></canvas></div>
+    </section>
+
     <section class="panel">
       <h2>1. 画像を選択</h2>
       <input id="files" class="file-input" type="file" accept="image/*" multiple>
@@ -25,7 +33,13 @@
     </section>
 
     <section class="panel">
-      <h2>2. 文字設定</h2>
+      <h2>2. 画像ごとの調整</h2>
+      <p class="note">プレビューを見ながら、左右・上下・拡大・左右反転を調整できます。</p>
+      <div id="controls" class="controls"></div>
+    </section>
+
+    <section class="panel">
+      <h2>3. 文字設定</h2>
       <label>サロン名・ブランド名</label>
       <input id="shop" type="text" value="Salon Name">
 
@@ -54,33 +68,21 @@
     </section>
 
     <section class="panel">
-      <h2>3. シームレス設定</h2>
+      <h2>4. シームレス設定</h2>
       <label class="check"><input id="seamlessOn" type="checkbox" checked> シームレスコラージュ風にする</label>
       <div class="grid-2">
         <div><label>重なり幅</label><input id="overlap" type="number" value="18" min="0" max="60"></div>
         <div><label>境界ぼかし</label><input id="fadeWidth" type="number" value="42" min="0" max="100"></div>
       </div>
-      <p class="note">MeituのAI合成ではなく、重なり＋フェードで自然に馴染ませます。</p>
-    </section>
-
-    <section class="panel">
-      <h2>4. 画像ごとの調整</h2>
-      <p class="note">左右・上下・拡大・左右反転を調整できます。</p>
-      <div id="controls" class="controls"></div>
+      <p class="note">重なり＋フェードで境界を自然に馴染ませます。</p>
     </section>
 
     <section class="panel action-panel">
-      <button id="make" class="primary">作成する</button>
-      <button id="save" class="secondary">PNG保存</button>
+      <button id="save" class="primary">PNG保存</button>
       <p id="status" class="note"></p>
-    </section>
-
-    <section class="panel">
-      <h2>プレビュー（750×250px）</h2>
-      <div class="preview"><canvas id="canvas" width="750" height="250"></canvas></div>
-      <p class="note">保存できない場合は、PNG保存後に下へ表示される画像を長押し保存してください。</p>
       <div id="imgOut"></div>
     </section>
+
     <footer>© Salon Banner Studio</footer>
   </main>
   <script src="script.js"></script>
