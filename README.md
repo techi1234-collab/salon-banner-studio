@@ -11,3 +11,8 @@ v1.1 Sticky Preview
 - Font, color, shadow controls
 - PNG export
 - iPhone friendly
+
+
+## v1.2 Text Position Update
+- Added text position: 左下
+- Added text position: 右下
