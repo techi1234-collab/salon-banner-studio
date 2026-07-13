@@ -162,35 +162,119 @@ function drawImageToContext(ctx, item, x, y, width, height, scaleFactor) {
   ctx.restore();
 }
 
-function createImageLayer(item, width, height, scaleFactor) {
-  const layer = document.createElement('canvas');
-  layer.width = Math.max(1, Math.round(width));
-  layer.height = Math.max(1, Math.round(height));
-  const layerCtx = layer.getContext('2d');
-  drawImageToContext(layerCtx, item, 0, 0, layer.width, layer.height, scaleFactor);
-  return layer;
+function drawClippedImage(ctx, item, imageX, imageY, imageW, imageH, clipX, clipW, scaleFactor, alpha = 1) {
+  if (clipW <= 0) return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(clipX, imageY, clipW, imageH);
+  ctx.clip();
+  ctx.globalAlpha = alpha;
+  drawImageToContext(ctx, item, imageX, imageY, imageW, imageH, scaleFactor);
+  ctx.restore();
 }
 
-function applyLeftCrossfadeMask(layer, fadeWidth) {
-  if (fadeWidth <= 0) return;
-  const ctx = layer.getContext('2d');
-  const width = layer.width;
-  const height = layer.height;
-  const fade = Math.min(width, Math.max(1, fadeWidth));
+function drawCrossfade(ctx, item, imageX, imageY, imageW, imageH, overlap, scaleFactor) {
+  if (overlap <= 0) return;
+
+  // iPhone Safariでも安定するように、offscreen canvasのマスク処理ではなく
+  // 細い縦帯を重ねてクロスフェードします。
+  const steps = Math.max(24, Math.min(96, Math.round(overlap / 2)));
+  const sliceW = overlap / steps;
+
+  for (let step = 0; step < steps; step += 1) {
+    const t = (step + 0.5) / steps;
+
+    // なめらかなS字カーブ。中央は自然に混ざり、端で急に切れません。
+    const alpha = t * t * (3 - 2 * t);
+    const clipX = imageX + step * sliceW;
+
+    drawClippedImage(
+      ctx,
+      item,
+      imageX,
+      imageY,
+      imageW,
+      imageH,
+      clipX,
+      sliceW + 1,
+      scaleFactor,
+      alpha
+    );
+  }
+}
+
+function renderScene(ctx, width, height) {
+  const scaleFactor = width / PREVIEW_W;
+
   ctx.save();
-  ctx.globalCompositeOperation = 'destination-in';
-  const gradient = ctx.createLinearGradient(0, 0, fade, 0);
-  gradient.addColorStop(0.00, 'rgba(0,0,0,0)');
-  gradient.addColorStop(0.15, 'rgba(0,0,0,0.03)');
-  gradient.addColorStop(0.35, 'rgba(0,0,0,0.16)');
-  gradient.addColorStop(0.50, 'rgba(0,0,0,0.50)');
-  gradient.addColorStop(0.65, 'rgba(0,0,0,0.84)');
-  gradient.addColorStop(0.85, 'rgba(0,0,0,0.97)');
-  gradient.addColorStop(1.00, 'rgba(0,0,0,1)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, fade, height);
-  ctx.fillStyle = 'rgba(0,0,0,1)';
-  ctx.fillRect(fade, 0, width - fade, height);
+  ctx.clearRect(0, 0, width, height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#eeeeee';
+  ctx.fillRect(0, 0, width, height);
+
+  const count = items.length;
+  if (!count) {
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = `${20 * scaleFactor}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('画像を4〜5枚選択してください', width / 2, height / 2);
+    ctx.restore();
+    return;
+  }
+
+  const seamless = document.getElementById('seamlessOn').checked;
+  const overlapSetting = Number(document.getElementById('overlap').value || 0);
+  const fadeSetting = Number(document.getElementById('fadeWidth').value || 0);
+
+  if (!seamless) {
+    const segmentW = width / count;
+    for (let i = 0; i < count; i += 1) {
+      drawImageToContext(ctx, items[i], i * segmentW, 0, segmentW, height, scaleFactor);
+    }
+  } else {
+    // 重なり幅とぼかし幅の大きい方を実際のクロスフェード幅として使用。
+    const overlap = Math.max(overlapSetting, fadeSetting) * scaleFactor;
+    const safeOverlap = Math.min(overlap, width / count * 0.7);
+    const segmentW = (width + safeOverlap * (count - 1)) / count;
+
+    // 1枚目は全面描画。
+    drawImageToContext(ctx, items[0], 0, 0, segmentW, height, scaleFactor);
+
+    for (let i = 1; i < count; i += 1) {
+      const x = i * (segmentW - safeOverlap);
+
+      // 重なり部分より右側を不透明で描画。
+      drawClippedImage(
+        ctx,
+        items[i],
+        x,
+        0,
+        segmentW,
+        height,
+        x + safeOverlap,
+        segmentW - safeOverlap,
+        scaleFactor,
+        1
+      );
+
+      // 重なり部分のみ、左0%→右100%のクロスフェード。
+      drawCrossfade(
+        ctx,
+        items[i],
+        x,
+        0,
+        segmentW,
+        height,
+        safeOverlap,
+        scaleFactor
+      );
+    }
+  }
+
+  drawText(ctx, width, height, scaleFactor);
   ctx.restore();
 }
 

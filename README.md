@@ -1,6 +1,6 @@
 # Salon Banner Studio
 
-## v2.0 Direct Render & Seamless Refresh
+## v2.1 iPhone Preview Fix
 
 - Preview: 750 × 250 px
 - Export: 3000 × 1000 px
@@ -20,3 +20,7 @@
 - iPhone friendly
 
 The seamless function is a browser-based crossfade, not AI background generation.
+
+- Fixed an iPhone Safari issue where only the first image appeared in preview
+- Replaced offscreen destination-in masks with stable strip-based crossfade
+- Direct 3000 × 1000 export remains enabled
