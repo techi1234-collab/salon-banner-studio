@@ -308,52 +308,21 @@ function drawText(ctx, width, height, scaleFactor) {
   ctx.restore();
 }
 
-function renderScene(ctx, width, height) {
-  const scaleFactor = width / PREVIEW_W;
-  ctx.save();
-  ctx.clearRect(0, 0, width, height);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.fillStyle = '#eeeeee';
-  ctx.fillRect(0, 0, width, height);
-
-  const count = items.length;
-  if (!count) {
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = `${20 * scaleFactor}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('画像を4〜5枚選択してください', width / 2, height / 2);
-    ctx.restore();
-    return;
-  }
-
-  const seamless = document.getElementById('seamlessOn').checked;
-  const overlap = seamless ? Number(document.getElementById('overlap').value || 0) * scaleFactor : 0;
-  const requestedFade = seamless ? Number(document.getElementById('fadeWidth').value || 0) * scaleFactor : 0;
-
-  if (!seamless) {
-    const segmentW = width / count;
-    for (let i = 0; i < count; i += 1) {
-      drawImageToContext(ctx, items[i], i * segmentW, 0, segmentW, height, scaleFactor);
-    }
-  } else {
-    const segmentW = (width + overlap * (count - 1)) / count;
-    const fadeWidth = Math.max(overlap, requestedFade);
-    for (let i = 0; i < count; i += 1) {
-      const x = i * (segmentW - overlap);
-      const layer = createImageLayer(items[i], segmentW, height, scaleFactor);
-      if (i > 0) applyLeftCrossfadeMask(layer, fadeWidth);
-      ctx.drawImage(layer, x, 0);
-    }
-  }
-
-  drawText(ctx, width, height, scaleFactor);
-  ctx.restore();
-}
-
 function drawPreview() {
-  renderScene(previewCtx, PREVIEW_W, PREVIEW_H);
+  try {
+    renderScene(previewCtx, PREVIEW_W, PREVIEW_H);
+  } catch (error) {
+    console.error('Preview render error:', error);
+    previewCtx.clearRect(0, 0, PREVIEW_W, PREVIEW_H);
+    previewCtx.fillStyle = '#eeeeee';
+    previewCtx.fillRect(0, 0, PREVIEW_W, PREVIEW_H);
+    previewCtx.fillStyle = '#8a7665';
+    previewCtx.font = '16px sans-serif';
+    previewCtx.textAlign = 'center';
+    previewCtx.textBaseline = 'middle';
+    previewCtx.fillText('プレビューの描画に失敗しました', PREVIEW_W / 2, PREVIEW_H / 2);
+    statusEl.textContent = 'プレビュー描画エラーが発生しました。ページを再読み込みしてください。';
+  }
 }
 
 function renderAll(rebuild = true) {
