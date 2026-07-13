@@ -20,7 +20,7 @@
     <section class="sticky-preview">
       <div class="preview-head">
         <strong>プレビュー</strong>
-        <span>750×250px</span>
+        <span>プレビュー 750×250px / 保存 3000×1000px（直接描画）</span>
       </div>
       <div class="preview"><canvas id="canvas" width="750" height="250"></canvas></div>
     </section>
@@ -78,11 +78,11 @@
         <div><label>重なり幅</label><input id="overlap" type="number" value="18" min="0" max="60"></div>
         <div><label>境界ぼかし</label><input id="fadeWidth" type="number" value="42" min="0" max="100"></div>
       </div>
-      <p class="note">重なり＋フェードで境界を自然に馴染ませます。</p>
+      <p class="note">画像同士をクロスフェードして、白い境界線を出さず自然に馴染ませます。</p>
     </section>
 
     <section class="panel action-panel">
-      <button id="save" class="primary">PNG保存</button>
+      <button id="save" class="primary">高画質PNG保存（3000×1000px）</button>
       <p id="status" class="note"></p>
       <div id="imgOut"></div>
     </section>

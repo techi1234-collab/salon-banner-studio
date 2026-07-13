@@ -1,18 +1,323 @@
-let items=[];let dragIndex=null;
-const slots=document.getElementById('slots'),controls=document.getElementById('controls'),canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),statusEl=document.getElementById('status'),imgOut=document.getElementById('imgOut');
-function load(file){return new Promise((resolve,reject)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>resolve({img,url,name:file.name,x:0,y:0,zoom:1.15,flip:false});img.onerror=reject;img.src=url;});}
-document.getElementById('files').addEventListener('change',async e=>{const files=Array.from(e.target.files).filter(f=>f.type.startsWith('image/')).slice(0,5);items=[];statusEl.textContent='読み込み中…';for(const f of files){items.push(await load(f));}renderAll();statusEl.textContent=items.length+'枚読み込みました';});
-function renderSlots(){slots.innerHTML='';const max=Math.max(items.length,5);for(let i=0;i<max;i++){const d=document.createElement('div');d.className='slot';d.draggable=!!items[i];d.dataset.index=i;if(items[i]){d.innerHTML='<span class="badge">'+(i+1)+'</span><img src="'+items[i].url+'">';d.addEventListener('dragstart',()=>{dragIndex=i;d.classList.add('dragging');});d.addEventListener('dragend',()=>{dragIndex=null;d.classList.remove('dragging');});d.addEventListener('dragover',ev=>ev.preventDefault());d.addEventListener('drop',ev=>{ev.preventDefault();const to=Number(d.dataset.index);if(dragIndex===null||dragIndex===to)return;const moved=items.splice(dragIndex,1)[0];items.splice(to,0,moved);renderAll();});}else{d.innerHTML='<span class="badge">'+(i+1)+'</span>画像';}slots.appendChild(d);}}
-function renderControls(){controls.innerHTML='';items.forEach((it,i)=>{const box=document.createElement('div');box.className='itemCtl';box.innerHTML=`<div class="itemTop"><strong>画像${i+1}</strong><div class="miniBtns"><button class="ghost" data-act="left">←</button><button class="ghost" data-act="right">→</button><button class="ghost" data-act="up">↑</button><button class="ghost" data-act="down">↓</button><button class="ghost" data-act="flip">${it.flip?'反転中':'左右反転'}</button></div></div><div class="sliderRow"><span>左右</span><input type="range" min="-120" max="120" value="${it.x}" data-kind="x"><span>${it.x}</span></div><div class="sliderRow"><span>上下</span><input type="range" min="-120" max="120" value="${it.y}" data-kind="y"><span>${it.y}</span></div><div class="sliderRow"><span>拡大</span><input type="range" min="90" max="170" value="${Math.round(it.zoom*100)}" data-kind="zoom"><span>${Math.round(it.zoom*100)}%</span></div>`;
-box.querySelectorAll('button').forEach(btn=>{btn.addEventListener('click',()=>{const act=btn.dataset.act;if(act==='left')it.x-=10;if(act==='right')it.x+=10;if(act==='up')it.y-=10;if(act==='down')it.y+=10;if(act==='flip')it.flip=!it.flip;it.x=Math.max(-120,Math.min(120,it.x));it.y=Math.max(-120,Math.min(120,it.y));renderAll();});});
-box.querySelectorAll('input[type=range]').forEach(sl=>{sl.addEventListener('input',()=>{if(sl.dataset.kind==='x')it.x=Number(sl.value);if(sl.dataset.kind==='y')it.y=Number(sl.value);if(sl.dataset.kind==='zoom')it.zoom=Number(sl.value)/100;renderAll(false);});});controls.appendChild(box);});}
-function fontCss(){const v=document.getElementById('fontFamily').value;if(v==='mincho')return '"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif';if(v==='gothic')return '"Hiragino Sans","Yu Gothic",Arial,sans-serif';if(v==='didot')return 'Didot,"Bodoni 72","Times New Roman",serif';if(v==='bodoni')return '"Bodoni 72","Bodoni 72 Smallcaps","Times New Roman",serif';if(v==='script')return '"Snell Roundhand","Zapfino","Brush Script MT",cursive';return 'Georgia,"Times New Roman",serif';}
-function coverParams(item,w,h){const img=item.img,iw=img.naturalWidth,ih=img.naturalHeight,scale=Math.max(w/iw,h/ih)*item.zoom,sw=w/scale,sh=h/scale;let sx=(iw-sw)/2+item.x/scale,sy=(ih-sh)*0.36+item.y/scale;sx=Math.max(0,Math.min(iw-sw,sx));sy=Math.max(0,Math.min(ih-sh,sy));return{sx,sy,sw,sh};}
-function drawItem(item,x,y,w,h){const p=coverParams(item,w,h);ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();if(item.flip){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,0,0,w,h);}else{ctx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,x,y,w,h);}ctx.restore();}
-function drawFeather(item,x,y,w,h,side,fade){if(fade<=0)return;const p=coverParams(item,w,h),off=document.createElement('canvas');off.width=Math.ceil(w);off.height=Math.ceil(h);const octx=off.getContext('2d');octx.save();if(item.flip){octx.translate(w,0);octx.scale(-1,1);octx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,0,0,w,h);}else{octx.drawImage(item.img,p.sx,p.sy,p.sw,p.sh,0,0,w,h);}octx.restore();octx.globalCompositeOperation='destination-in';const grad=octx.createLinearGradient(0,0,w,0);if(side==='left'){grad.addColorStop(0,'rgba(0,0,0,0)');grad.addColorStop(Math.min(1,fade/w),'rgba(0,0,0,1)');grad.addColorStop(1,'rgba(0,0,0,1)');}else{grad.addColorStop(0,'rgba(0,0,0,1)');grad.addColorStop(Math.max(0,1-fade/w),'rgba(0,0,0,1)');grad.addColorStop(1,'rgba(0,0,0,0)');}octx.fillStyle=grad;octx.fillRect(0,0,w,h);ctx.drawImage(off,x,y);}
-function draw(){ctx.clearRect(0,0,750,250);ctx.fillStyle='#eee';ctx.fillRect(0,0,750,250);const n=items.length;if(!n){ctx.fillStyle='#aaa';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('画像を4〜5枚選択してください',375,125);return;}const seamless=document.getElementById('seamlessOn').checked,overlap=seamless?Number(document.getElementById('overlap').value||0):0,fade=seamless?Number(document.getElementById('fadeWidth').value||0):0,baseW=seamless?(750+overlap*(n-1))/n:750/n;if(!seamless){const w=750/n;for(let i=0;i<n;i++)drawItem(items[i],i*w,0,w,250);}else{for(let i=0;i<n;i++){const x=i*(baseW-overlap);drawItem(items[i],x,0,baseW,250);}for(let i=1;i<n;i++){const seamX=i*(baseW-overlap),leftX=(i-1)*(baseW-overlap),rightX=i*(baseW-overlap);drawFeather(items[i-1],leftX,0,baseW,250,'right',fade);drawFeather(items[i],rightX,0,baseW,250,'left',fade);const gx=seamX-fade/2,g=ctx.createLinearGradient(gx,0,gx+fade,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.10)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.fillRect(gx,0,fade,250);}}const pos=document.getElementById('textPos').value,text=document.getElementById('shop').value.trim();if(pos!=='none'&&text){const fs=parseInt(document.getElementById('fontSize').value||'34',10);let x=375,y=208,align='center';if(pos==='top'){y=48;}if(pos==='center'){y=125;}if(pos==='bottomLeft'){x=34;y=208;align='left';}if(pos==='bottomRight'){x=716;y=208;align='right';}ctx.save();ctx.font=fs+'px '+fontCss();ctx.textAlign=align;ctx.textBaseline='middle';if(document.getElementById('shadowOn').checked){ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=7;ctx.shadowOffsetY=2;}ctx.fillStyle=document.getElementById('textColor').value;ctx.fillText(text,x,y);ctx.restore();}}
-function renderAll(rebuild=true){renderSlots();if(rebuild)renderControls();draw();}
-function save(){draw();const data=canvas.toDataURL('image/png'),a=document.createElement('a');a.download='salon-banner-studio-750x250.png';a.href=data;a.click();imgOut.innerHTML='<p class="note">保存できない場合は下の画像を長押し保存してください。</p><img src="'+data+'">';}
-document.getElementById('save').addEventListener('click',save);
-['shop','fontFamily','textColor','fontSize','textPos','shadowOn','seamlessOn','overlap','fadeWidth'].forEach(id=>{const el=document.getElementById(id);el.addEventListener('input',()=>renderAll(false));el.addEventListener('change',()=>renderAll(false));});
-document.querySelectorAll('.swatch').forEach(b=>{b.addEventListener('click',()=>{document.getElementById('textColor').value=b.dataset.color;renderAll(false);});});renderAll();
+let items = [];
+let dragIndex = null;
+
+const slots = document.getElementById('slots');
+const controls = document.getElementById('controls');
+const previewCanvas = document.getElementById('canvas');
+const previewCtx = previewCanvas.getContext('2d');
+const statusEl = document.getElementById('status');
+const imgOut = document.getElementById('imgOut');
+
+const PREVIEW_W = 750;
+const PREVIEW_H = 250;
+const EXPORT_W = 3000;
+const EXPORT_H = 1000;
+
+function load(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => resolve({ img, url, name: file.name, x: 0, y: 0, zoom: 1.15, flip: false });
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+document.getElementById('files').addEventListener('change', async (event) => {
+  const files = Array.from(event.target.files)
+    .filter((file) => file.type.startsWith('image/'))
+    .slice(0, 5);
+
+  items.forEach((item) => URL.revokeObjectURL(item.url));
+  items = [];
+  statusEl.textContent = '読み込み中…';
+
+  for (const file of files) items.push(await load(file));
+
+  renderAll();
+  statusEl.textContent = `${items.length}枚読み込みました`;
+});
+
+function renderSlots() {
+  slots.innerHTML = '';
+  const max = Math.max(items.length, 5);
+
+  for (let i = 0; i < max; i += 1) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.draggable = Boolean(items[i]);
+    slot.dataset.index = String(i);
+
+    if (items[i]) {
+      slot.innerHTML = `<span class="badge">${i + 1}</span><img src="${items[i].url}">`;
+      slot.addEventListener('dragstart', () => {
+        dragIndex = i;
+        slot.classList.add('dragging');
+      });
+      slot.addEventListener('dragend', () => {
+        dragIndex = null;
+        slot.classList.remove('dragging');
+      });
+      slot.addEventListener('dragover', (e) => e.preventDefault());
+      slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const to = Number(slot.dataset.index);
+        if (dragIndex === null || dragIndex === to) return;
+        const moved = items.splice(dragIndex, 1)[0];
+        items.splice(to, 0, moved);
+        renderAll();
+      });
+    } else {
+      slot.innerHTML = `<span class="badge">${i + 1}</span>画像`;
+    }
+
+    slots.appendChild(slot);
+  }
+}
+
+function renderControls() {
+  controls.innerHTML = '';
+
+  items.forEach((item, index) => {
+    const box = document.createElement('div');
+    box.className = 'itemCtl';
+    box.innerHTML = `
+      <div class="itemTop">
+        <strong>画像${index + 1}</strong>
+        <div class="miniBtns">
+          <button class="ghost" data-act="left">←</button>
+          <button class="ghost" data-act="right">→</button>
+          <button class="ghost" data-act="up">↑</button>
+          <button class="ghost" data-act="down">↓</button>
+          <button class="ghost" data-act="flip">${item.flip ? '反転中' : '左右反転'}</button>
+        </div>
+      </div>
+      <div class="sliderRow"><span>左右</span><input type="range" min="-120" max="120" value="${item.x}" data-kind="x"><span>${item.x}</span></div>
+      <div class="sliderRow"><span>上下</span><input type="range" min="-120" max="120" value="${item.y}" data-kind="y"><span>${item.y}</span></div>
+      <div class="sliderRow"><span>拡大</span><input type="range" min="90" max="170" value="${Math.round(item.zoom * 100)}" data-kind="zoom"><span>${Math.round(item.zoom * 100)}%</span></div>`;
+
+    box.querySelectorAll('button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.act;
+        if (action === 'left') item.x -= 10;
+        if (action === 'right') item.x += 10;
+        if (action === 'up') item.y -= 10;
+        if (action === 'down') item.y += 10;
+        if (action === 'flip') item.flip = !item.flip;
+        item.x = Math.max(-120, Math.min(120, item.x));
+        item.y = Math.max(-120, Math.min(120, item.y));
+        renderAll();
+      });
+    });
+
+    box.querySelectorAll('input[type="range"]').forEach((slider) => {
+      slider.addEventListener('input', () => {
+        if (slider.dataset.kind === 'x') item.x = Number(slider.value);
+        if (slider.dataset.kind === 'y') item.y = Number(slider.value);
+        if (slider.dataset.kind === 'zoom') item.zoom = Number(slider.value) / 100;
+        renderAll(false);
+      });
+    });
+
+    controls.appendChild(box);
+  });
+}
+
+function fontCss() {
+  const value = document.getElementById('fontFamily').value;
+  if (value === 'mincho') return '"Yu Mincho","Hiragino Mincho ProN","Times New Roman",serif';
+  if (value === 'gothic') return '"Hiragino Sans","Yu Gothic",Arial,sans-serif';
+  if (value === 'didot') return 'Didot,"Bodoni 72","Times New Roman",serif';
+  if (value === 'bodoni') return '"Bodoni 72","Bodoni 72 Smallcaps","Times New Roman",serif';
+  if (value === 'script') return '"Snell Roundhand","Zapfino","Brush Script MT",cursive';
+  return 'Georgia,"Times New Roman",serif';
+}
+
+function coverParams(item, targetW, targetH, scaleFactor) {
+  const img = item.img;
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
+  const scale = Math.max(targetW / iw, targetH / ih) * item.zoom;
+  const sourceW = targetW / scale;
+  const sourceH = targetH / scale;
+  let sourceX = (iw - sourceW) / 2 + (item.x * scaleFactor) / scale;
+  let sourceY = (ih - sourceH) * 0.36 + (item.y * scaleFactor) / scale;
+  sourceX = Math.max(0, Math.min(iw - sourceW, sourceX));
+  sourceY = Math.max(0, Math.min(ih - sourceH, sourceY));
+  return { sourceX, sourceY, sourceW, sourceH };
+}
+
+function drawImageToContext(ctx, item, x, y, width, height, scaleFactor) {
+  const p = coverParams(item, width, height, scaleFactor);
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  if (item.flip) {
+    ctx.translate(x + width, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(item.img, p.sourceX, p.sourceY, p.sourceW, p.sourceH, 0, 0, width, height);
+  } else {
+    ctx.drawImage(item.img, p.sourceX, p.sourceY, p.sourceW, p.sourceH, x, y, width, height);
+  }
+  ctx.restore();
+}
+
+function createImageLayer(item, width, height, scaleFactor) {
+  const layer = document.createElement('canvas');
+  layer.width = Math.max(1, Math.round(width));
+  layer.height = Math.max(1, Math.round(height));
+  const layerCtx = layer.getContext('2d');
+  drawImageToContext(layerCtx, item, 0, 0, layer.width, layer.height, scaleFactor);
+  return layer;
+}
+
+function applyLeftCrossfadeMask(layer, fadeWidth) {
+  if (fadeWidth <= 0) return;
+  const ctx = layer.getContext('2d');
+  const width = layer.width;
+  const height = layer.height;
+  const fade = Math.min(width, Math.max(1, fadeWidth));
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-in';
+  const gradient = ctx.createLinearGradient(0, 0, fade, 0);
+  gradient.addColorStop(0.00, 'rgba(0,0,0,0)');
+  gradient.addColorStop(0.15, 'rgba(0,0,0,0.03)');
+  gradient.addColorStop(0.35, 'rgba(0,0,0,0.16)');
+  gradient.addColorStop(0.50, 'rgba(0,0,0,0.50)');
+  gradient.addColorStop(0.65, 'rgba(0,0,0,0.84)');
+  gradient.addColorStop(0.85, 'rgba(0,0,0,0.97)');
+  gradient.addColorStop(1.00, 'rgba(0,0,0,1)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, fade, height);
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fillRect(fade, 0, width - fade, height);
+  ctx.restore();
+}
+
+function drawText(ctx, width, height, scaleFactor) {
+  const position = document.getElementById('textPos').value;
+  const text = document.getElementById('shop').value.trim();
+  if (position === 'none' || !text) return;
+
+  const fontSize = Number(document.getElementById('fontSize').value || 34) * scaleFactor;
+  const marginX = 34 * scaleFactor;
+  let x = width / 2;
+  let y = 208 * scaleFactor;
+  let align = 'center';
+
+  if (position === 'top') y = 48 * scaleFactor;
+  if (position === 'center') y = height / 2;
+  if (position === 'bottomLeft') { x = marginX; align = 'left'; }
+  if (position === 'bottomRight') { x = width - marginX; align = 'right'; }
+
+  ctx.save();
+  ctx.font = `${fontSize}px ${fontCss()}`;
+  ctx.textAlign = align;
+  ctx.textBaseline = 'middle';
+  if (document.getElementById('shadowOn').checked) {
+    ctx.shadowColor = 'rgba(0,0,0,.45)';
+    ctx.shadowBlur = 7 * scaleFactor;
+    ctx.shadowOffsetY = 2 * scaleFactor;
+  }
+  ctx.fillStyle = document.getElementById('textColor').value;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function renderScene(ctx, width, height) {
+  const scaleFactor = width / PREVIEW_W;
+  ctx.save();
+  ctx.clearRect(0, 0, width, height);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#eeeeee';
+  ctx.fillRect(0, 0, width, height);
+
+  const count = items.length;
+  if (!count) {
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = `${20 * scaleFactor}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('画像を4〜5枚選択してください', width / 2, height / 2);
+    ctx.restore();
+    return;
+  }
+
+  const seamless = document.getElementById('seamlessOn').checked;
+  const overlap = seamless ? Number(document.getElementById('overlap').value || 0) * scaleFactor : 0;
+  const requestedFade = seamless ? Number(document.getElementById('fadeWidth').value || 0) * scaleFactor : 0;
+
+  if (!seamless) {
+    const segmentW = width / count;
+    for (let i = 0; i < count; i += 1) {
+      drawImageToContext(ctx, items[i], i * segmentW, 0, segmentW, height, scaleFactor);
+    }
+  } else {
+    const segmentW = (width + overlap * (count - 1)) / count;
+    const fadeWidth = Math.max(overlap, requestedFade);
+    for (let i = 0; i < count; i += 1) {
+      const x = i * (segmentW - overlap);
+      const layer = createImageLayer(items[i], segmentW, height, scaleFactor);
+      if (i > 0) applyLeftCrossfadeMask(layer, fadeWidth);
+      ctx.drawImage(layer, x, 0);
+    }
+  }
+
+  drawText(ctx, width, height, scaleFactor);
+  ctx.restore();
+}
+
+function drawPreview() {
+  renderScene(previewCtx, PREVIEW_W, PREVIEW_H);
+}
+
+function renderAll(rebuild = true) {
+  renderSlots();
+  if (rebuild) renderControls();
+  drawPreview();
+}
+
+function saveHighResolution() {
+  statusEl.textContent = '3000×1000pxで高画質レンダリング中…';
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = EXPORT_W;
+  exportCanvas.height = EXPORT_H;
+  const exportCtx = exportCanvas.getContext('2d');
+
+  // Original photos are drawn directly into the 3000×1000 canvas.
+  renderScene(exportCtx, EXPORT_W, EXPORT_H);
+
+  exportCanvas.toBlob((blob) => {
+    if (!blob) {
+      statusEl.textContent = '保存用画像の作成に失敗しました。';
+      return;
+    }
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = 'salon-banner-studio-3000x1000.png';
+    link.href = blobUrl;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    imgOut.innerHTML = `<p class="note">3000×1000pxで直接描画しました。保存できない場合は下の画像を長押し保存してください。</p><img src="${blobUrl}" alt="高画質バナー">`;
+    statusEl.textContent = '高画質PNGを作成しました。';
+  }, 'image/png');
+}
+
+document.getElementById('save').addEventListener('click', saveHighResolution);
+
+['shop','fontFamily','textColor','fontSize','textPos','shadowOn','seamlessOn','overlap','fadeWidth'].forEach((id) => {
+  const element = document.getElementById(id);
+  element.addEventListener('input', () => renderAll(false));
+  element.addEventListener('change', () => renderAll(false));
+});
+
+document.querySelectorAll('.swatch').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.getElementById('textColor').value = button.dataset.color;
+    renderAll(false);
+  });
+});
+
+renderAll();
